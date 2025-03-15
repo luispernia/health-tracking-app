@@ -24,3 +24,31 @@ export const Colors = {
     tabIconSelected: tintColorDark,
   },
 };
+
+export const colors = {
+  // Main colors
+  background: '#282828',
+  backgroundSecondary: '#3c3836',
+  text: '#ebdbb2',
+  textSecondary: '#a89984',
+  
+  // Accent colors
+  primaryYellow: '#fabd2f',
+  secondaryYellow: '#d79921',
+  orange: '#fe8019',
+  red: '#fb4934',
+  green: '#b8bb26',
+  blue: '#83a598',
+  purple: '#d3869b',
+  aqua: '#8ec07c',
+  
+  // UI specific colors
+  tabBarActive: '#fabd2f',
+  tabBarInactive: '#a89984',
+  border: '#504945',
+  
+  // Transparency versions for overlays
+  backgroundTransparent: 'rgba(40, 40, 40, 0.9)',
+};
+
+export default colors;
