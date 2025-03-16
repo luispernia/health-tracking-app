@@ -49,11 +49,18 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   waterIntake: 1.5,
   waterIntakeGoal: 2.5,
   
-  isLoading: false,
+  isLoading: true,
   
   // Initialize store with default values
   initializeStore: () => {
-    set({ isLoading: false });
+    // First set loading to true
+    set({ isLoading: true });
+    
+    // Simulate fetching data
+    setTimeout(() => {
+      // After data is "loaded", set loading to false
+      set({ isLoading: false });
+    }, 300);
   },
   
   // Update steps

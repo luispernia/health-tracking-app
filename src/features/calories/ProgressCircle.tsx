@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 import Svg, { Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { colors } from '@constants/Colors';
@@ -9,12 +9,13 @@ import Animated, {
   interpolate,
   Easing,
   useAnimatedStyle,
-  withSpring
+  withSpring,
+  useAnimatedReaction,
+  runOnJS
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedText = Animated.createAnimatedComponent(Text);
 
 // Constants
 const CIRCLE_RADIUS = 60;
@@ -45,10 +46,13 @@ export default function ProgressCircle({
   changePercent,
   subtitle
 }: ProgressCircleProps) {
-  // Animation shared values
-  const progress = useSharedValue(0);
-  const currentValue = useSharedValue(0);
+  // Animation shared values - initialize with actual values immediately
+  const progress = useSharedValue(Math.min(value / goal, 1));
+  const currentValue = useSharedValue(value);
   const scaleValue = useSharedValue(1);
+  
+  // State to track the displayed value (to avoid accessing shared value in render)
+  const [displayValue, setDisplayValue] = useState(Math.round(value));
   
   // Calculate percentage
   const percentage = Math.min(value / goal, 1);
@@ -81,6 +85,16 @@ export default function ProgressCircle({
     });
   }, [value, goal, percentage]);
 
+  // Update the displayed value whenever the animated value changes
+  useAnimatedReaction(
+    () => {
+      return Math.round(currentValue.value);
+    },
+    (result) => {
+      runOnJS(setDisplayValue)(result);
+    }
+  );
+
   // Animated props for progress circle
   const animatedCircleProps = useAnimatedProps(() => {
     const strokeDashoffset = interpolate(
@@ -100,16 +114,6 @@ export default function ProgressCircle({
       transform: [{ scale: scaleValue.value }]
     };
   });
-  
-  // Animated style for value text
-  const valueTextStyle = useAnimatedStyle(() => {
-    return {
-      fontSize: 32,
-      fontWeight: '600',
-      color: isAboveGoal ? '#FF3B30' : color,
-      marginBottom: 2,
-    };
-  });
 
   return (
     <Animated.View style={[styles.container, containerStyle]}>
@@ -121,9 +125,6 @@ export default function ProgressCircle({
           <Text style={styles.title}>{title}</Text>
         </View>
         
-        {lastUpdated && (
-          <Text style={styles.lastUpdated}>{lastUpdated}</Text>
-        )}
       </View>
       
       <View style={styles.contentSection}>
@@ -161,9 +162,14 @@ export default function ProgressCircle({
           </Svg>
           
           <View style={styles.centerTextContainer}>
-            <AnimatedText style={valueTextStyle}>
-              {Math.round(currentValue.value)}
-            </AnimatedText>
+            <Text style={[{
+              fontSize: 32,
+              fontWeight: '600',
+              color: isAboveGoal ? '#FF3B30' : color,
+              marginBottom: 2,
+            }]}>
+              {displayValue}
+            </Text>
             <Text style={styles.unit}>{unit}</Text>
           </View>
         </View>

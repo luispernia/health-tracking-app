@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { colors } from '@constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -20,6 +21,8 @@ import Animated, {
 
 // Main Body Screen Component
 export default function BodyScreen() {
+  const router = useRouter();
+  
   // State for weight tracking
   const [weight, setWeight] = useState('75.5');
   const [goalWeight, setGoalWeight] = useState('70.0');
@@ -83,10 +86,10 @@ export default function BodyScreen() {
             <Text style={styles.greeting}>Track</Text>
             <Text style={styles.title}>Body Metrics</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton}>
-            <Ionicons name="options-outline" size={24} color={colors.primaryYellow} />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.profileButton}>
+              <Ionicons name="options-outline" size={24} color={colors.primaryYellow} />
+            </TouchableOpacity>
+          </View>
         
         {/* Current Weight Section */}
         <View style={styles.weightSection}>
@@ -265,6 +268,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingTop: 8,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   greeting: {
     fontSize: 16,
     color: colors.textSecondary,
@@ -274,6 +281,21 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
+  },
+  dbTestButton: {
+    backgroundColor: colors.primaryYellow,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  dbTestButtonText: {
+    color: colors.background,
+    fontWeight: '600',
+    fontSize: 12,
+    marginLeft: 4,
   },
   profileButton: {
     width: 40,

@@ -36,8 +36,6 @@ export default function ActivityScreen() {
     distance, 
     calories, 
     calorieGoal,
-    caloriesIntake,
-    caloriesIntakeGoal,
     caloriesGained,
     waterIntake,
     waterIntakeGoal,
@@ -149,16 +147,6 @@ export default function ActivityScreen() {
             color="#007AFF" 
             subtitle="This week: 15.8 km"
             percentChange={8}
-          />
-          
-          <ActivityCard 
-            icon="heart" 
-            title="Heart Rate"
-            value="72"
-            unit="bpm"
-            color="#FF3B30" 
-            subtitle="Resting: 65 bpm"
-            onPress={() => {}}
           />
         </View>
         
