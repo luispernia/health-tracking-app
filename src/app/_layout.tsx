@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { colors } from '@constants/Colors';
+import { StoreProvider } from '../store/StoreProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -56,9 +57,11 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <ThemeProvider value={customDarkTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <StoreProvider>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </StoreProvider>
     </ThemeProvider>
   );
 }

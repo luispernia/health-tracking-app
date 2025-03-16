@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -7,151 +7,177 @@ import {
   ScrollView, 
   StatusBar,
   Dimensions,
-  TouchableOpacity
+  ActivityIndicator
 } from 'react-native';
-import CalorieProgressCircle from '@features/calories/CalorieProgressCircle';
-import ActivitySummaryCard from '@features/calories/ActivitySummaryCard';
-import ActivitySelectionModal from '@features/calories/ActivitySelectionModal';
+import ProgressCircle from '@features/calories/ProgressCircle';
+import ActivityCard from '@features/calories/ActivityCard';
 import { colors } from '@constants/Colors';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  withSpring,
-  withSequence,
-  withDelay,
-  Easing,
-  FadeIn,
-  SlideInRight
-} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { useActivityStore } from '../../store/activity-store';
 
 const { width } = Dimensions.get('window');
 
-export default function ActivityScreen() {
-  // State
-  const [caloriesBurned, setCaloriesBurned] = useState(420);
-  const [calorieGoal, setCalorieGoal] = useState(800);
-  const [showActivityModal, setShowActivityModal] = useState(false);
-  
-  // Animation values
-  const headerOpacity = useSharedValue(0);
-  const progressScale = useSharedValue(0.9);
-  
-  // Background small calorie increments for simulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCaloriesBurned(prev => {
-        // Random small increment between 1-3 calories for background activity
-        const increment = Math.floor(Math.random() * 3) + 1;
-        return prev + increment;
-      });
-    }, 15000); // Update every 15 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Initial animations
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 800 });
-    progressScale.value = withSpring(1, { damping: 12 });
-  }, []);
-  
-  // Animated styles
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [
-      { translateY: withTiming((1 - headerOpacity.value) * -20, { duration: 500 }) }
-    ]
-  }));
-  
-  const circleContainerStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: progressScale.value }
-    ]
-  }));
+// Helper to get current time in readable format
+const getCurrentTime = () => {
+  const now = new Date();
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
-  // Handle adding calories from workout
-  const handleAddCalories = (calories: number) => {
-    setCaloriesBurned(prev => prev + calories);
-    
-    // Pulse animation
-    progressScale.value = withSequence(
-      withTiming(1.05, { duration: 200 }),
-      withTiming(1, { duration: 300 })
+// Helper to format date for last updated
+const getLastUpdated = () => {
+  return `Updated ${getCurrentTime()}`;
+};
+
+export default function ActivityScreen() {
+  // Global state
+  const { 
+    steps, 
+    activeMinutes, 
+    distance, 
+    calories, 
+    calorieGoal,
+    caloriesIntake,
+    caloriesIntakeGoal,
+    caloriesGained,
+    waterIntake,
+    waterIntakeGoal,
+    isLoading
+  } = useActivityStore();
+  
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primaryYellow} />
+          <Text style={styles.loadingText}>Loading activity data...</Text>
+        </View>
+      </SafeAreaView>
     );
-  };
+  }
   
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Animated.View style={[styles.header, headerAnimatedStyle]}>
-          <Text style={styles.greeting}>Hi there,</Text>
-          <Text style={styles.title}>Your Fitness Dashboard</Text>
-        </Animated.View>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Today</Text>
+            <Text style={styles.title}>Health Summary</Text>
+          </View>
+          <View style={styles.profileIconContainer}>
+            <Ionicons name="person-circle" size={40} color={colors.primaryYellow} />
+          </View>
+        </View>
         
-        {/* Main Calorie Component */}
-        <Animated.View 
-          style={[styles.calorieMainSection, circleContainerStyle]}
-          entering={FadeIn.duration(600).delay(300)}
-        >
-          <CalorieProgressCircle 
-            calories={caloriesBurned} 
-            goal={calorieGoal} 
+        {/* Main Progress Circles */}
+        <View style={styles.metricsSection}>
+          <ProgressCircle
+            value={calories}
+            goal={calorieGoal}
+            title="Calories Burned"
+            unit="cal"
+            color={'#FF9500'}
+            secondaryColor={'#FF2D55'}
+            icon="flame"
+            lastUpdated={getLastUpdated()}
+            changePercent={8}
+            subtitle="Active Calories"
           />
           
-          <TouchableOpacity 
-            style={styles.addCaloriesButton}
-            onPress={() => setShowActivityModal(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="fitness" size={20} color={colors.background} />
-            <Text style={styles.buttonText}>Log Workout</Text>
-          </TouchableOpacity>
-        </Animated.View>
-        
-        <View style={styles.summarySection}>
-          <Text style={styles.sectionTitle}>Activity Summary</Text>
+          <ProgressCircle
+            value={caloriesGained}
+            goal={1000}
+            title="Calories Gained"
+            unit="cal"
+            color={'#FF2D55'}
+            secondaryColor={'#FF9500'}
+            icon="trending-up"
+            lastUpdated={getLastUpdated()}
+            changePercent={-3}
+            subtitle="Consumed Today"
+          />
           
-          <Animated.View entering={SlideInRight.duration(400).delay(200)}>
-            <ActivitySummaryCard 
-              icon="footsteps" 
-              title="Steps"
-              value="5,248"
-              unit="steps"
-              color={colors.primaryYellow} 
-            />
-          </Animated.View>
-          
-          <Animated.View entering={SlideInRight.duration(400).delay(300)}>
-            <ActivitySummaryCard 
-              icon="time-outline" 
-              title="Active Time"
-              value="47"
-              unit="min"
-              color={colors.orange} 
-            />
-          </Animated.View>
-          
-          <Animated.View entering={SlideInRight.duration(400).delay(400)}>
-            <ActivitySummaryCard 
-              icon="trending-up" 
-              title="Distance"
-              value="3.2"
-              unit="km"
-              color={colors.green} 
-            />
-          </Animated.View>
+          <ProgressCircle
+            value={waterIntake}
+            goal={waterIntakeGoal}
+            title="Water Intake"
+            unit="L"
+            color={'#5AC8FA'}
+            secondaryColor={'#007AFF'}
+            icon="water"
+            lastUpdated={getLastUpdated()}
+            changePercent={12}
+            subtitle="Hydration Level"
+          />
         </View>
+        
+        {/* Activity Overview Section */}
+        <View style={styles.overviewSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Activity Overview</Text>
+            <Text style={styles.sectionSubtitle}>Today's Stats</Text>
+          </View>
+          
+          <ActivityCard 
+            icon="footsteps" 
+            title="Steps"
+            value={steps.toLocaleString()}
+            unit="steps"
+            color="#5E5CE6" 
+            subtitle="Daily average: 6,540 steps"
+            percentChange={15}
+          />
+          
+          <ActivityCard 
+            icon="time-outline" 
+            title="Active Time"
+            value={activeMinutes}
+            unit="min"
+            color="#30D158" 
+            subtitle="Weekly goal: 180 minutes"
+            percentChange={-5}
+          />
+          
+          <ActivityCard 
+            icon="trending-up" 
+            title="Distance"
+            value={distance.toFixed(1)}
+            unit="km"
+            color="#007AFF" 
+            subtitle="This week: 15.8 km"
+            percentChange={8}
+          />
+          
+          <ActivityCard 
+            icon="heart" 
+            title="Heart Rate"
+            value="72"
+            unit="bpm"
+            color="#FF3B30" 
+            subtitle="Resting: 65 bpm"
+            onPress={() => {}}
+          />
+        </View>
+        
+        {/* Weekly Summary Graph - Placeholder */}
+        <View style={styles.weeklySection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Weekly Overview</Text>
+            <Text style={styles.sectionSubtitle}>Last 7 Days</Text>
+          </View>
+          
+          <View style={styles.graphPlaceholder}>
+            <Text style={styles.placeholderText}>Weekly Activity Chart</Text>
+            <Text style={styles.placeholderSubtext}>Tap to view detailed stats</Text>
+          </View>
+        </View>
+        
+        {/* Add extra padding at the bottom to ensure content isn't covered by the tab bar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
-      
-      {/* Activity Selection Modal */}
-      <ActivitySelectionModal
-        visible={showActivityModal}
-        onClose={() => setShowActivityModal(false)}
-        onSelectActivity={handleAddCalories}
-      />
     </SafeAreaView>
   );
 }
@@ -162,55 +188,86 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: 20,
+    padding: 16,
+    paddingBottom: 32,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   greeting: {
     fontSize: 16,
     color: colors.textSecondary,
+    marginBottom: 4,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    marginTop: 4,
   },
-  calorieMainSection: {
-    alignItems: 'center',
+  profileIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
     justifyContent: 'center',
-    marginBottom: 30,
-    paddingVertical: 20,
-  },
-  addCaloriesButton: {
-    marginTop: 16,
-    backgroundColor: colors.primaryYellow,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primaryYellow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
-  buttonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+  metricsSection: {
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
+  overviewSection: {
+    marginBottom: 24,
+  },
+  weeklySection: {
     marginBottom: 16,
   },
-  summarySection: {
-    marginBottom: 20,
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  graphPlaceholder: {
+    height: 180,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  placeholderText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.primaryYellow,
+    marginBottom: 8,
+  },
+  placeholderSubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: colors.text,
   },
 }); 

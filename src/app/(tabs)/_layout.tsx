@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { colors } from '@constants/Colors';
+import CustomTabBar from '../../components/CustomTabBar';
 
 export default function TabLayout() {
   return (
@@ -9,55 +9,44 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.tabBarActive,
         tabBarInactiveTintColor: colors.tabBarInactive,
-        tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        headerShown: true,
+        headerShown: false,
         headerStyle: {
           backgroundColor: colors.background,
         },
         headerTitleStyle: {
           color: colors.text,
         },
-        tabBarActiveBackgroundColor: colors.background,
-        tabBarInactiveBackgroundColor: colors.background,
-      }}>
+        tabBarShowLabel: true,
+        tabBarStyle: { 
+          display: 'none', // Hide the default tab bar as we're using a custom one
+        },
+      }}
+      tabBar={(props) => <CustomTabBar {...props} />}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Activity',
-          tabBarIcon: ({ color }) => <Ionicons name="stats-chart" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="workouts"
         options={{
           title: 'Workouts',
-          tabBarIcon: ({ color }) => <Ionicons name="fitness" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="body"
+        options={{
+          title: 'Body',
         }}
       />
       <Tabs.Screen
         name="diet"
         options={{
           title: 'Diet',
-          tabBarIcon: ({ color }) => <Ionicons name="restaurant" size={24} color={color} />,
         }}
       />
     </Tabs>
   );
-}
-
-const styles = StyleSheet.create({
-  tabBar: {
-    elevation: 0,
-    shadowOpacity: 0,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    height: 60,
-    paddingBottom: 5,
-    backgroundColor: colors.background,
-  },
-  tabBarLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-}); 
+} 
