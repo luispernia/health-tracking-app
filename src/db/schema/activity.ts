@@ -74,5 +74,21 @@ export const userSettings = sqliteTable('user_settings', {
   dailyStepsGoal: integer('daily_steps_goal').default(10000),
   notificationsEnabled: integer('notifications_enabled', { mode: 'boolean' }).default(true),
   theme: text('theme').default('light'),
+  dailyCaloriesIntakeGoal: real('daily_calories_intake_goal').default(2000),
+  dailyWaterIntakeGoal: real('daily_water_intake_goal').default(2.5),
+});
+
+// New table for tracking daily nutrition and hydration
+export const dailyNutrition = sqliteTable('daily_nutrition', {
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  userId: integer('user_id', { mode: 'number' })
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  date: text('date').notNull(),
+  caloriesIntake: real('calories_intake').default(0),
+  caloriesGained: real('calories_gained').default(0),
+  waterIntake: real('water_intake').default(0), // in liters
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 

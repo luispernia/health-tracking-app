@@ -80,7 +80,7 @@ export default function ActivityCard({
       <Animated.View style={[styles.container, containerStyle]}>
         <View style={styles.content}>
           <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-            <Ionicons name={icon} size={18} color={color} />
+            <Ionicons name={icon} size={20} color={color} />
           </View>
           
           <View style={styles.textContainer}>
@@ -119,7 +119,6 @@ export default function ActivityCard({
 const styles = StyleSheet.create({
   pressableContainer: {
     width: '100%',
-    marginBottom: 12,
   },
   container: {
     borderRadius: 16,
@@ -136,9 +135,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

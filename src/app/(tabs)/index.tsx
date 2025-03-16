@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import ProgressCircle from '@features/calories/ProgressCircle';
 import ActivityCard from '@features/calories/ActivityCard';
+import StepTracker from '@features/steps/StepTracker';
 import { colors } from '@constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useActivityStore } from '../../store/activity-store';
@@ -70,8 +71,14 @@ export default function ActivityScreen() {
           </View>
         </View>
         
-        {/* Main Progress Circles */}
-        <View style={styles.metricsSection}>
+        {/* Main Progress Circles - Horizontally Scrollable */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.metricsScrollContainer}
+          snapToInterval={width - 64 + 16}
+          decelerationRate="fast"
+        >
           <ProgressCircle
             value={calories}
             goal={calorieGoal}
@@ -110,61 +117,72 @@ export default function ActivityScreen() {
             changePercent={12}
             subtitle="Hydration Level"
           />
+        </ScrollView>
+        
+        {/* Step Tracker Section */}
+        <View style={styles.sectionTitle}>
+          <Text style={styles.sectionTitleText}>Step Activity</Text>
+          <Text style={styles.sectionSubtitle}>Live tracking with pedometer</Text>
         </View>
         
-        {/* Activity Overview Section */}
-        <View style={styles.overviewSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Activity Overview</Text>
-            <Text style={styles.sectionSubtitle}>Today's Stats</Text>
-          </View>
-          
-          <ActivityCard 
-            icon="footsteps" 
-            title="Steps"
-            value={steps.toLocaleString()}
-            unit="steps"
-            color="#5E5CE6" 
-            subtitle="Daily average: 6,540 steps"
-            percentChange={15}
-          />
-          
-          <ActivityCard 
-            icon="time-outline" 
-            title="Active Time"
-            value={activeMinutes}
-            unit="min"
-            color="#30D158" 
-            subtitle="Weekly goal: 180 minutes"
-            percentChange={-5}
-          />
-          
-          <ActivityCard 
-            icon="trending-up" 
-            title="Distance"
-            value={distance.toFixed(1)}
-            unit="km"
-            color="#007AFF" 
-            subtitle="This week: 15.8 km"
-            percentChange={8}
-          />
+        <View style={styles.stepsSection}>
+          <StepTracker />
         </View>
         
-        {/* Weekly Summary Graph - Placeholder */}
-        <View style={styles.weeklySection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Weekly Overview</Text>
-            <Text style={styles.sectionSubtitle}>Last 7 Days</Text>
+        {/* Activity Cards Section */}
+        <View style={styles.sectionTitle}>
+          <Text style={styles.sectionTitleText}>Activity Metrics</Text>
+          <Text style={styles.sectionSubtitle}>Today's Statistics</Text>
+        </View>
+        
+        <View style={styles.activityCardsContainer}>
+          <View style={styles.cardWrapper}>
+            <ActivityCard
+              title="Steps"
+              value={steps}
+              icon="footsteps"
+              color="#5E60CE"
+              percentChange={12}
+              unit="steps"
+            />
           </View>
           
-          <View style={styles.graphPlaceholder}>
-            <Text style={styles.placeholderText}>Weekly Activity Chart</Text>
-            <Text style={styles.placeholderSubtext}>Tap to view detailed stats</Text>
+          <View style={styles.cardWrapper}>
+            <ActivityCard
+              title="Distance"
+              value={distance}
+              icon="map"
+              color="#64DFDF"
+              percentChange={5}
+              unit="km"
+            />
+          </View>
+          
+          <View style={styles.cardWrapper}>
+            <ActivityCard
+              title="Active Minutes"
+              value={activeMinutes}
+              icon="timer"
+              color="#80FFDB"
+              percentChange={15}
+              unit="min"
+            />
+          </View>
+          
+          <View style={styles.cardWrapper}>
+            <ActivityCard
+              title="Water"
+              value={waterIntake}
+              icon="water"
+              color="#48BFE3"
+              percentChange={10}
+              unit="L"
+            />
           </View>
         </View>
         
-        {/* Add extra padding at the bottom to ensure content isn't covered by the tab bar */}
-        <View style={{ height: 100 }} />
+        {/* Spacer for navigation bar */}
+        <View style={styles.navigationSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -179,11 +197,21 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: colors.text,
+    marginTop: 12,
+    fontSize: 16,
+  },
   header: {
-    marginBottom: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 24,
   },
   greeting: {
     fontSize: 16,
@@ -191,71 +219,47 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
   profileIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: 'hidden',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.backgroundSecondary,
   },
-  metricsSection: {
-    marginBottom: 24,
-  },
-  overviewSection: {
-    marginBottom: 24,
-  },
-  weeklySection: {
+  metricsScrollContainer: {
+    paddingRight: 16,
+    paddingBottom: 8,
     marginBottom: 16,
   },
-  sectionHeader: {
-    marginBottom: 16,
+  stepsSection: {
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    marginBottom: 16,
+  },
+  sectionTitleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
+    marginTop: 4,
   },
-  graphPlaceholder: {
-    height: 180,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+  activityCardsContainer: {
+    flexDirection: 'column',
+    marginBottom: 16,
   },
-  placeholderText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.primaryYellow,
-    marginBottom: 8,
+  cardWrapper: {
+    marginBottom: 12,
   },
-  placeholderSubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: colors.text,
+  navigationSpacer: {
+    height: 80, // Add space for the navigation bar
   },
 }); 

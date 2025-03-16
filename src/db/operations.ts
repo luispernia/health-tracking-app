@@ -1,4 +1,4 @@
-import { db, activities, dailySummaries, users, calorieGoals, userSettings, activityTypes } from './index';
+import { db, activities, dailySummaries, users, calorieGoals, userSettings, activityTypes, dailyNutrition } from './index';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 
 // User operations
@@ -191,4 +191,123 @@ export const getDailySummary = async (userId: number, date: string = new Date().
   }
   
   return result[0];
+};
+
+// Nutrition operations
+export const getDailyNutrition = async (userId: number, date: string = new Date().toISOString().split('T')[0]) => {
+  const result = await db
+    .select()
+    .from(dailyNutrition)
+    .where(
+      and(
+        eq(dailyNutrition.userId, userId),
+        eq(dailyNutrition.date, date)
+      )
+    );
+  
+  if (result.length === 0) {
+    // Create a new record if none exists
+    const newRecord = await db.insert(dailyNutrition).values({
+      userId,
+      date,
+      caloriesIntake: 0,
+      caloriesGained: 0,
+      waterIntake: 0,
+    }).returning();
+    
+    return newRecord[0];
+  }
+  
+  return result[0];
+};
+
+export const updateCaloriesIntake = async (userId: number, calories: number, date: string = new Date().toISOString().split('T')[0]) => {
+  const nutrition = await getDailyNutrition(userId, date);
+  
+  return db
+    .update(dailyNutrition)
+    .set({
+      caloriesIntake: calories,
+      caloriesGained: (nutrition.caloriesIntake || 0) > calories ? 0 : calories - (nutrition.caloriesIntake || 0),
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(dailyNutrition.id, nutrition.id))
+    .returning();
+};
+
+export const updateWaterIntake = async (userId: number, amount: number, date: string = new Date().toISOString().split('T')[0]) => {
+  const nutrition = await getDailyNutrition(userId, date);
+  
+  return db
+    .update(dailyNutrition)
+    .set({
+      waterIntake: amount,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(dailyNutrition.id, nutrition.id))
+    .returning();
+};
+
+export const addWaterIntake = async (userId: number, amount: number, date: string = new Date().toISOString().split('T')[0]) => {
+  const nutrition = await getDailyNutrition(userId, date);
+  
+  return db
+    .update(dailyNutrition)
+    .set({
+      waterIntake: (nutrition.waterIntake || 0) + amount,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(dailyNutrition.id, nutrition.id))
+    .returning();
+};
+
+export const getNutritionGoals = async (userId: number) => {
+  const settings = await getUserSettings(userId);
+  
+  return {
+    caloriesIntakeGoal: settings?.dailyCaloriesIntakeGoal || 2000,
+    waterIntakeGoal: settings?.dailyWaterIntakeGoal || 2.5,
+  };
+};
+
+export const updateCaloriesIntakeGoal = async (userId: number, goal: number) => {
+  const settings = await getUserSettings(userId);
+  
+  if (!settings) {
+    // If no settings exist, create them
+    return db.insert(userSettings).values({
+      userId,
+      dailyCaloriesIntakeGoal: goal,
+    }).returning();
+  }
+  
+  // Update existing settings
+  return db
+    .update(userSettings)
+    .set({
+      dailyCaloriesIntakeGoal: goal,
+    })
+    .where(eq(userSettings.userId, userId))
+    .returning();
+};
+
+export const updateWaterIntakeGoal = async (userId: number, goal: number) => {
+  const settings = await getUserSettings(userId);
+  
+  if (!settings) {
+    // If no settings exist, create them
+    return db.insert(userSettings).values({
+      userId,
+      dailyWaterIntakeGoal: goal,
+    }).returning();
+  }
+  
+  // Update existing settings
+  return db
+    .update(userSettings)
+    .set({
+      dailyWaterIntakeGoal: goal,
+    })
+    .where(eq(userSettings.userId, userId))
+    .returning();
 }; 

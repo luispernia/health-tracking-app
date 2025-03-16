@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, Dimensions } from 'react-native';
 import Svg, { Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { colors } from '@constants/Colors';
 import Animated, { 
@@ -17,9 +17,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// Constants
+// Get screen width to dynamically size circles
+const { width } = Dimensions.get('window');
+// Calculate radius based on screen width for horizontal scroll
 const CIRCLE_RADIUS = 60;
-const STROKE_WIDTH = 12;
+const STROKE_WIDTH = 10;
 
 interface ProgressCircleProps {
   value: number;
@@ -124,16 +126,16 @@ export default function ProgressCircle({
           </View>
           <Text style={styles.title}>{title}</Text>
         </View>
-        
+
       </View>
       
       <View style={styles.contentSection}>
         <View style={styles.circleContainer}>
-          <Svg width={CIRCLE_RADIUS * 2 + STROKE_WIDTH * 2} height={CIRCLE_RADIUS * 2 + STROKE_WIDTH * 2} viewBox={`0 0 ${CIRCLE_RADIUS * 2 + STROKE_WIDTH * 2} ${CIRCLE_RADIUS * 2 + STROKE_WIDTH * 2}`}>
+          <Svg width={(CIRCLE_RADIUS + STROKE_WIDTH) * 2} height={(CIRCLE_RADIUS + STROKE_WIDTH) * 2}>
             <Defs>
-              <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor={gradientStart} stopOpacity="1" />
-                <Stop offset="1" stopColor={gradientEnd} stopOpacity="1" />
+              <LinearGradient id="grad" x1="0" y1="0" x2="100%" y2="0">
+                <Stop offset="0" stopColor={color} />
+                <Stop offset="1" stopColor={secondaryColor || color} />
               </LinearGradient>
             </Defs>
             <G rotation="-90" origin={`${CIRCLE_RADIUS + STROKE_WIDTH}, ${CIRCLE_RADIUS + STROKE_WIDTH}`}>
@@ -142,10 +144,11 @@ export default function ProgressCircle({
                 cx={CIRCLE_RADIUS + STROKE_WIDTH}
                 cy={CIRCLE_RADIUS + STROKE_WIDTH}
                 r={CIRCLE_RADIUS}
-                stroke={colors.backgroundSecondary}
-                strokeWidth={STROKE_WIDTH}
+                stroke={colors.background}
+                strokeWidth={STROKE_WIDTH - 1}
                 fill="transparent"
               />
+              
               {/* Progress Circle */}
               <AnimatedCircle
                 cx={CIRCLE_RADIUS + STROKE_WIDTH}
@@ -163,7 +166,7 @@ export default function ProgressCircle({
           
           <View style={styles.centerTextContainer}>
             <Text style={[{
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: '600',
               color: isAboveGoal ? '#FF3B30' : color,
               marginBottom: 2,
@@ -181,14 +184,14 @@ export default function ProgressCircle({
           
           <View style={styles.goalContainer}>
             <Text style={styles.goalText}>
-              {isAboveGoal ? 'Exceeded goal by' : 'Goal:'} {goal} {unit}
+              {isAboveGoal ? 'Exceeded' : 'Goal:'} {goal} {unit}
             </Text>
             
             {changePercent !== undefined && (
               <View style={styles.changeContainer}>
                 <Ionicons 
                   name={changePercent >= 0 ? "arrow-up" : "arrow-down"} 
-                  size={14} 
+                  size={12} 
                   color={changePercent >= 0 ? colors.green : colors.red} 
                 />
                 <Text style={[
@@ -204,8 +207,8 @@ export default function ProgressCircle({
           <View style={styles.progressTextContainer}>
             <Text style={styles.progressText}>
               {isAboveGoal 
-                ? "Goal completed!" 
-                : `${Math.round(percentage * 100)}% of daily goal`}
+                ? "Completed!" 
+                : `${Math.round(percentage * 100)}% complete`}
             </Text>
           </View>
         </View>
@@ -220,17 +223,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    marginLeft: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+    width: (width - 64) / 1,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -245,16 +250,15 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
   lastUpdated: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
   },
   contentSection: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
   circleContainer: {
@@ -273,32 +277,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   detailsContainer: {
-    flex: 1,
-    marginLeft: 16,
+    width: '100%',
+    marginTop: 10,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 4,
+    textAlign: 'center',
   },
   goalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   goalText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.text,
     fontWeight: '500',
+    textAlign: 'center',
   },
   changeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 4,
   },
   changeText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     marginLeft: 2,
   },
@@ -306,7 +314,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   progressText: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
 }); 

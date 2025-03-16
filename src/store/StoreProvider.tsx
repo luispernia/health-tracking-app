@@ -10,15 +10,30 @@ interface StoreProviderProps {
 
 export function StoreProvider({ children }: StoreProviderProps) {
   const [initialized, setInitialized] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const initializeStore = useActivityStore(state => state.initializeStore);
   const loadWorkoutHistory = useWorkoutStore(state => state.loadWorkoutHistory);
   const isStoreLoading = useActivityStore(state => state.isLoading);
   
   useEffect(() => {
-    const setupStore = () => {
-      // Initialize stores with default values
-      initializeStore();
-      loadWorkoutHistory();
+    const setupStore = async () => {
+      try {
+        // Initialize stores with values from database
+        await initializeStore();
+        
+        if (typeof loadWorkoutHistory === 'function') {
+          // Check if it returns a promise
+          try {
+            await Promise.resolve(loadWorkoutHistory());
+          } catch (e) {
+            // If it's not a promise, this will just silently fail
+            // which is fine since we're just trying to await if possible
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing store:', error);
+        setError('Failed to load data. Please restart the app.');
+      }
     };
     
     setupStore();
@@ -32,11 +47,19 @@ export function StoreProvider({ children }: StoreProviderProps) {
     }
   }, [isStoreLoading]);
   
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+  
   if (!initialized) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primaryYellow} />
-        <Text style={styles.loadingText}>Initializing app...</Text>
+        <Text style={styles.loadingText}>Loading activity data...</Text>
       </View>
     );
   }
@@ -55,5 +78,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: colors.text,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    padding: 20,
   },
 }); 
