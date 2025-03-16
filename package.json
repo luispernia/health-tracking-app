@@ -9,6 +9,7 @@
     "migrate-to-src": "node ./scripts/migrate-to-src.js",
     "cleanup-after-migration": "node ./scripts/cleanup-after-migration.js",
     "run-migration": "node ./scripts/run-migration.js",
+    "db-migrate": "node ./scripts/run-db-migration.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
